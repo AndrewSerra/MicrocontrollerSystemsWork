@@ -20,28 +20,26 @@ void setup() {
   TCCR1A = 0x00;
   TCCR1B = 0x00;
 
-  // Clears OC1X on compare match
-  TCCR1A |= 0x80; // Set COM1A1
-  TCCR1A &= 0xBF; // Clear COM1A0
+  // Clears OC1X on compare match no need because of LED
+  //  TCCR1A |= 0x80; // Set COM1A1
+  //  TCCR1A &= 0xBF; // Clear COM1A0
   
   // Counts up, updates OCR1A immediately and sets TOV1 flag at MAX
-  TCCR1A &= 0xFC; // Clear WGM11 and WGM10
-  TCCR1B |= 0x08; // Set WGM12
+  TCCR1A = 0x00; // Clear WGM11 and WGM10
+  TCCR1B = 0x0C; // Set WGM13 and WGM12
   
   // Setup prescaler clkI/O 256
   TCCR1B |= 0x04; // Set CS12
   TCCR1B &= 0xFC; // Clear CS11 and CS10
 
   // Set compare register
-  OCR1A = 31999;
+  OCR1A = 62499; // steps required for 1 second
 
   // Enable interrupts
   TIMSK1 |= 0x02;
   
   // Turn on global interrupts
   sei();
-
-  Serial.begin(9600);
 }
 ISR(TIMER1_COMPA_vect) {
   if(PORTD & 0x04) {
@@ -50,6 +48,9 @@ ISR(TIMER1_COMPA_vect) {
   else {
     PORTD |= 0x04;
   }
+
+  // OR USE EXCLUSIVE OR
+  // PORTD ^= 0x04;
 }
 void loop() {
 }
