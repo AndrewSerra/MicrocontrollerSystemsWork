@@ -17,7 +17,7 @@
 // Normal mode TCNT1 Start val
 #define TCNT_START_VALUE 3036
 // Fast PWM Mode led brightness value
-#define OCR0B_70_PERC_VAL 150
+#define OCR0B_75_PERC_VAL 150
 
 volatile int count = COUNT_START_VALUE;
 boolean isSwPressed, prevSwPressed, isSwJustPressed;
@@ -76,7 +76,7 @@ void loop() {
   // Set interrupt and LED Signals
   if(isSwJustPressed && (PINB & (1 << RED_LED_PIN))) {
     PORTB &= (0 << RED_LED_PIN);
-    OCR0B = OCR0B_70_PERC_VAL;
+    OCR0B = OCR0B_75_PERC_VAL;
     sei();
   }
   
