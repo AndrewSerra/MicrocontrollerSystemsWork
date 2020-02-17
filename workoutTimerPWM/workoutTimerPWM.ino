@@ -67,8 +67,6 @@ ISR(TIMER1_OVF_vect) {
 }
 
 void loop() {
-
-  Serial.println(TCNT0);
   prevSwPressed = isSwPressed;
   isSwPressed = ~PIND & (1 << SW_PIN);
   isSwJustPressed = !prevSwPressed & isSwPressed;
