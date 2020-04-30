@@ -37,7 +37,6 @@ const int PWM_CD_PIN = 5;
 int MotorABpwmOffset = 0;
 int MotorCDpwmOffset = 0;
 
-int turnCount = 0;
 int stateTimer = 0;
 boolean isNewState = true;
 boolean squareCompleted = false;
@@ -65,7 +64,7 @@ void configureTimer0RegisterForPWMtoDriveMotor() {
 //==================================================
 // RGB led color is Green = DIM_GREEN_COLOR
 void go_forward(int rate, int steering) {
-  display_color_on_RGB_led(DIM_GREEN_COLOR);
+//  display_color_on_RGB_led(DIM_GREEN_COLOR);
   digitalWrite(AB_mtr_INA_PIN, LOW);  
   digitalWrite(AB_mtr_INB_PIN, HIGH);  
   digitalWrite(CD_mtr_INC_PIN, LOW);  
@@ -77,7 +76,7 @@ void go_forward(int rate, int steering) {
 //==================================================
 // RGB led color is White = DIM_WHITE_COLOR
 void go_backward(int rate, int steering) {
-  display_color_on_RGB_led(DIM_WHITE_COLOR);
+//  display_color_on_RGB_led(DIM_WHITE_COLOR);
   digitalWrite(AB_mtr_INA_PIN, HIGH);  
   digitalWrite(AB_mtr_INB_PIN, LOW);  
   digitalWrite(CD_mtr_INC_PIN, HIGH);  
@@ -89,26 +88,32 @@ void go_backward(int rate, int steering) {
 //==================================================
 // RGB led color is Green plus Blue = DIM_GREEN_BLUE_COLOR
 void turn_clockwise(int rate) {
-  OCR0A = MotorCDpwmOffset + rate;
-  OCR0B = MotorCDpwmOffset + rate;
+//  OCR0A = MotorCDpwmOffset + rate;
+//  OCR0B = MotorCDpwmOffset + rate;
 
   digitalWrite(AB_mtr_INA_PIN, LOW);  
   digitalWrite(AB_mtr_INB_PIN, HIGH);  
   digitalWrite(CD_mtr_INC_PIN, LOW);  
   digitalWrite(CD_mtr_IND_PIN, LOW); 
 //  display_color_on_RGB_led(DIM_GREEN_BLUE_COLOR);
+
+  analogWrite(PWM_AB_PIN, MotorABpwmOffset + rate);
+  analogWrite(PWM_CD_PIN, MotorCDpwmOffset + rate);
 }
 //==================================================
 // RGB led color is Red plus Blue = DIM_RED_BLUE_COLOR
 void turn_counterclockwise(int rate) {
-  OCR0A = MotorABpwmOffset + rate;
-  OCR0B = MotorABpwmOffset + rate;
+//  OCR0A = MotorABpwmOffset + rate;
+//  OCR0B = MotorABpwmOffset + rate;
 
   digitalWrite(AB_mtr_INA_PIN, LOW);  
   digitalWrite(AB_mtr_INB_PIN, LOW);  
   digitalWrite(CD_mtr_INC_PIN, LOW);  
   digitalWrite(CD_mtr_IND_PIN, HIGH); 
 //  display_color_on_RGB_led(DIM_RED_BLUE_COLOR);
+
+  analogWrite(PWM_AB_PIN, MotorABpwmOffset + rate);
+  analogWrite(PWM_CD_PIN, MotorCDpwmOffset + rate);
 }
 //==================================================
 // RGB led color is Red = DIM_RED_COLOR
@@ -184,7 +189,7 @@ void robot_goes_forward_at_given_yaw_at_speed(float yaw_heading, int rate) {
 }//robot_goes_forward_at_given_yaw_at_speed()
 //==================================================
 void robot_goes_backward_at_given_yaw_at_speed(float yaw_heading, int rate) {
-  go_backward(rate, 3.0 * (yaw_heading - yaw));
+  go_backward(rate, -3.0 * (yaw_heading - yaw));
 }//robot_goes_backward_at_given_yaw_at_speed()
 //==================================================
 void robot_turns_to_heading(float yaw_heading) {  
@@ -247,7 +252,6 @@ void loop() {
   unsigned int timestampStartOfMillis = millis(); // mark time start
   isNewState = prevDirectionState != directionState;
   prevDirectionState = directionState;
-  squareCompleted = turnCount == 4;     // Check if the four turns are completed
 
   // Calculate the yaw value
   normalizedGyroDPS = mpu.readNormalizeGyro();
@@ -264,7 +268,6 @@ void loop() {
         Serial.println("New state is STOPPED.");
         stop_action(120);
         stateTimer = 0;
-        turnCount = 0;
       }
 
       // State business
@@ -281,7 +284,7 @@ void loop() {
         robot_commanded_heading = yaw;        
         Serial.print("New state is FORWARD, \tcommanded heading is ");         
         Serial.println(robot_commanded_heading);        
-        display_color_on_RGB_led(DIM_GREEN_COLOR);
+        display_color_on_RGB_led(DIM_WHITE_COLOR);
         stateTimer = 0;
       }
 
@@ -291,7 +294,8 @@ void loop() {
 
       // Exit housekeeping
       if (stateTimer > STATE_TIME_THRESHOLD) {
-        directionState = LEFT_TURN;
+        directionState = RIGHT_TURN;
+        delay(200);
       }
       break;
     case BACKWARD:
@@ -300,7 +304,7 @@ void loop() {
         robot_commanded_heading = yaw;        
         Serial.print("New state is BACKWARD, \tcommanded heading is ");         
         Serial.println(robot_commanded_heading);        
-        display_color_on_RGB_led(DIM_GREEN_COLOR);
+        display_color_on_RGB_led(DIM_WHITE_COLOR);
         stateTimer = 0;
       }
 
@@ -309,8 +313,9 @@ void loop() {
       stateTimer++;
 
       // Exit housekeeping
-      if (stateTimer > STATE_TIME_THRESHOLD) {
+       if (stateTimer > STATE_TIME_THRESHOLD) {
         directionState = LEFT_TURN;
+        delay(200);
       }
       break;
     case LEFT_TURN:
@@ -328,7 +333,8 @@ void loop() {
 
       // Exit housekeeping
       if(yaw > robot_commanded_heading) {
-        directionState = FORWARD;
+        directionState = STOPPED;
+        delay(200);
       }
       break;
     case RIGHT_TURN:
@@ -346,7 +352,7 @@ void loop() {
 
       // Exit housekeeping
       if(yaw < robot_commanded_heading) {
-        directionState = FORWARD;
+        directionState = BACKWARD;
       }
       break;
     case CALIBRATE_MOTOR_STICTION:
@@ -372,7 +378,7 @@ void loop() {
       // State business
 
       // Exit housekeeping
-      directionState = STOPPED;
+      directionState = FORWARD;
       break;
     default:
       directionState = STOPPED;
